@@ -1,11 +1,18 @@
 use std::alloc::{self, Layout};
+use std::cell::Cell;
 use std::os::raw::c_void;
 use std::ptr;
+use std::sync::Arc;
 
 #[cfg(feature = "luau")]
 use crate::lua::ExtraData;
+use crate::Lua;
 
 pub(crate) static ALLOCATOR: ffi::lua_Alloc = allocator;
+
+thread_local! {
+    pub static LUA_RUNTIME: Cell<Option<Arc<Lua>>> = Cell::new(None);
+}
 
 #[derive(Default)]
 pub(crate) struct MemoryState {
@@ -151,6 +158,18 @@ unsafe extern "C-unwind" fn allocator(
             alloc::handle_alloc_error(new_layout);
         }
         mem_state.num_allocations = mem_state.num_allocations.wrapping_add(1);
+        LUA_RUNTIME.with(|lua| {
+            let l = lua.take();
+            if let Some(l) = l.as_ref() {
+                eprintln!(
+                    "{}",
+                    l.inspect_stack(1)
+                        .map(|x| format!("{:?} {:?}, {}", x.names(), x.source(), x.curr_line()))
+                        .unwrap_or_else(String::new)
+                );
+            }
+            lua.set(l);
+        });
         return new_ptr;
     }
 

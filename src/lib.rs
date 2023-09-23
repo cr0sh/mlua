@@ -110,6 +110,7 @@ pub use crate::error::{Error, ErrorContext, ExternalError, ExternalResult, Resul
 pub use crate::function::{Function, FunctionInfo};
 pub use crate::hook::{Debug, DebugEvent, DebugNames, DebugSource, DebugStack};
 pub use crate::lua::{GCMode, Lua, LuaOptions};
+pub use crate::memory::LUA_RUNTIME;
 pub use crate::multi::Variadic;
 pub use crate::scope::Scope;
 pub use crate::stdlib::StdLib;
